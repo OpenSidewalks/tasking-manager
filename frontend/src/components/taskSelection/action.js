@@ -4,6 +4,7 @@ import { navigate } from '@reach/router';
 import ReactPlaceholder from 'react-placeholder';
 import Popup from 'reactjs-popup';
 import { FormattedMessage } from 'react-intl';
+import ReactTooltip from 'react-tooltip';
 
 import messages from './messages';
 import { ProjectInstructions } from './instructions';
@@ -11,7 +12,7 @@ import { TasksMap } from './map';
 import { HeaderLine } from '../projectDetail/header';
 import { Button } from '../button';
 import Portal from '../portal';
-import { SidebarIcon, InfoIcon } from '../svgIcons';
+import { SidebarIcon } from '../svgIcons';
 import { openEditor, getTaskGpxUrl, formatImageryUrl } from '../../utils/openEditor';
 import { TaskHistory } from './taskActivity';
 import { ChangesetCommentTags } from './changesetComment';
@@ -49,6 +50,13 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
 
   const taskHistoryPresent =
     taskHistory && taskHistory.taskHistory && taskHistory.taskHistory.length > 1;
+
+  const invalidatedTaskHistory = taskHistoryPresent
+    ? taskHistory.taskHistory.filter((task) => task.actionText === 'INVALIDATED')
+    : [];
+  const commentsPresent = taskHistoryPresent
+    ? taskHistory.taskHistory.filter((task) => task.action === 'COMMENT')
+    : [];
 
   const getTaskGpxUrlCallback = useCallback((project, tasks) => getTaskGpxUrl(project, tasks), []);
   const formatImageryUrlCallback = useCallback((imagery) => formatImageryUrl(imagery), []);
@@ -174,14 +182,6 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
                 </h3>
                 <DueDateBox dueDate={timer} align="left" intervalMili={60000} />
               </div>
-              {taskHistoryPresent && activeSection !== 'history' && (
-                <div class="flex items-center justify-center pa1 bg-grey-light blue-grey">
-                  <InfoIcon />
-                  <span class="ml2 fw1 pa1">
-                    <FormattedMessage {...messages.readTaskComments} />
-                  </span>
-                </div>
-              )}
               <div className="cf">
                 <div className="cf ttu barlow-condensed f4 pv2 blue-dark">
                   <span
@@ -202,6 +202,8 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
                   </span>
                   {activeTasks && activeTasks.length === 1 && (
                     <span
+                      data-tip
+                      data-for="taskCommentsTooltip"
                       className={`pb2 pointer truncate ${
                         activeSection === 'history' && 'bb b--blue-dark'
                       }`}
@@ -219,6 +221,19 @@ export function TaskMapAction({ project, projectIsReady, tasks, activeTasks, act
                     </span>
                   )}
                 </div>
+                {taskHistoryPresent &&
+                  invalidatedTaskHistory.length > 0 &&
+                  commentsPresent.length > 0 && (
+                    <ReactTooltip
+                      id="taskCommentsTooltip"
+                      place="bottom"
+                      type="dark"
+                      delayHide={200}
+                      effect="float"
+                    >
+                      <FormattedMessage {...messages.readTaskComments} />
+                    </ReactTooltip>
+                  )}
               </div>
               <div className="pt3">
                 {activeSection === 'completion' && (
