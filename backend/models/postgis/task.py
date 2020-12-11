@@ -350,6 +350,37 @@ class TaskHistory(db.Model):
         db.session.commit()
 
     @staticmethod
+    def unlock_parent_tasks(task_id: int):
+        """
+        Sets the parent tasks to unlocked if all their dependencies are validated
+        :param task_id: Task in scope
+        :return:
+        """
+        # TODO: Change out 'TaskDependency' for class that interacts with the task dependencies table 
+        parent_tasks = TaskDependency.query.filter(
+            TaskDependency.child == task_id
+        ).all()
+
+        for parent_task in parent_tasks:
+            parent_task_dependents_minus_current = TaskDependency.query.filter(
+                TaskDependency.parent == task_id,
+                TaskDependency.child != task_id
+            ).all()
+
+            # check if any of the dependencies are still locked
+            dependent_task_ids = [ task.id for task in parent_task_dependents_minus_current ]
+            locked_tasks = TaskHistory.query.filter(
+                TaskHistory.task_id.in_(dependent_task_ids),
+                TaskHistory.action == TaskStatus.LOCKED_FOR_DEPENDENCY
+            ).all()
+
+            if len(locked_tasks) == 0: 
+                task_history.set_task_locked_action(parent_task.id, TaskStatus.READY)
+
+        db.session.commit()
+
+
+    @staticmethod
     def get_all_comments(project_id: int) -> ProjectCommentsDTO:
         """ Gets all comments for the supplied project_id"""
 

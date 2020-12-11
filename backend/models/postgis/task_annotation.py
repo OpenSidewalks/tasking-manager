@@ -5,7 +5,7 @@ from backend.models.dtos.project_dto import ProjectTaskAnnotationsDTO
 
 
 class TaskAnnotation(db.Model):
-    """ Describes Task annotaions like derived ML attributes """
+    """ Describes Task annotations like derived ML attributes """
 
     __tablename__ = "task_annotations"
 
