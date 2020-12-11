@@ -537,7 +537,8 @@ class Project(db.Model):
     def can_be_deleted(self) -> bool:
         """ Projects can be deleted if they have no mapped work """
         task_count = self.tasks.filter(
-            Task.task_status != TaskStatus.READY.value
+            (Task.task_status != TaskStatus.READY.value) and
+            (Task.task_status != TaskStatus.LOCKED_FOR_DEPENDENCY.value)
         ).count()
         if task_count == 0:
             return True

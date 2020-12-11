@@ -59,6 +59,7 @@ class MappingService:
         if logged_in_user_id and TaskStatus(task.task_status) not in [
             TaskStatus.LOCKED_FOR_MAPPING,
             TaskStatus.LOCKED_FOR_VALIDATION,
+            TaskStatus.LOCKED_FOR_DEPENDENCY,
             TaskStatus.READY,
         ]:
 

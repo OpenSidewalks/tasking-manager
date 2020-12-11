@@ -173,8 +173,12 @@ class ProjectAdminService:
         tasks_to_reset = Task.query.filter(Task.project_id == project_id).all()
 
         for task in tasks_to_reset:
+            if task.has_dependencies:
+                new_task_status = TaskStatus.LOCKED_FOR_DEPENDENCY
+            else:
+                new_task_status = TaskStatus.READY
             task.set_task_history(
-                TaskAction.COMMENT, user_id, "Task reset", TaskStatus.READY
+                TaskAction.COMMENT, user_id, "Task reset", new_task_status
             )
             task.reset_task(user_id)
 

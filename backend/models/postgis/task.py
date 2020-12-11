@@ -394,17 +394,35 @@ class TaskHistory(db.Model):
         )
 
         if not result:
-            return TaskStatus.READY  # No result so default to ready status
+            task_result = (
+                db.session.query(Task.has_dependencies)
+                .filter(Task.id == task_id)
+                .fetchone()
+            )
+            if task_result[0][0]:
+                return TaskStatus.LOCKED_FOR_DEPENDENCY
+            else:
+                return TaskStatus.READY  # No result so default to ready status
 
         if len(result) == 1 and for_undo:
-            # We're looking for the previous status, however, there isn't any so we'll return Ready
-            return TaskStatus.READY
+            task_result = (
+                db.session.query(Task.has_dependencies)
+                .filter(Task.id == task_id)
+                .fetchone()
+            )
+            if task_result[0][0]:
+                return TaskStatus.LOCKED_FOR_DEPENDENCY
+            else:
+                # We're looking for the previous status, however, there isn't any so we'll return Ready
+                return TaskStatus.READY
 
         if for_undo and result[0][0] in [
             TaskStatus.MAPPED.name,
             TaskStatus.BADIMAGERY.name,
         ]:
             # We need to return a READY when last status of the task is badimagery or mapped.
+            # OpenSidewlaks FIXME: dive deeper into this state and see whether
+            # it needs to conditionally return TaskStatus.LOCKED_FOR_DEPENDENCY
             return TaskStatus.READY
 
         if for_undo:
